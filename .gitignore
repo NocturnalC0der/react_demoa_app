@@ -1,0 +1,5 @@
+# Packages:
+backed/.venv/
+pyproject.toml
+frontend/node_modules/
+
