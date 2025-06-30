@@ -7,14 +7,10 @@ Three microservices:
 
 The microservices should be built as docker images.
 
-Communication between the microservices should be done in two ways:
-1. internal API on the docker network.
-2. internal MQTT topics
-- I will be able to choose the communication mode upon starting the application.
-
 ### Project purpose
 The project will serve as a way for me to learn the basics of React JS frontend,
-and also the microservice architecture
+and also the microservice architecture. 
+I want to learn these concepts becuase I'm planning to build bigger application in the future.
 
 ### You Role
 Your role in this project is not to write code for me.

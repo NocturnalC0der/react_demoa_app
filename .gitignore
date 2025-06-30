@@ -3,3 +3,5 @@ backed/.venv/
 pyproject.toml
 frontend/node_modules/
 
+notes.md
+0_context/
