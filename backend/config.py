@@ -1,16 +1,28 @@
 import os
-
+from dotenv import load_dotenv
+load_dotenv()
 
 db_params = {
-    'database': os.getenv("DB_NAME"),
     'host': os.getenv("DB_HOST"),
-    'port': os.getenv("DB_PORT"),
+    'database': os.getenv("DB_NAME"),
     'user': os.getenv("DB_USER"),
     'password': os.getenv("DB_PASSWORD"),
+    'port': os.getenv("DB_PORT"),
 
 }
 
+print(db_params)
+# 
 db_statements = {
-    'insert_coors': """INSERT INTO graph_data (x_value, y_value) VALUES (%s, %s)""",
-    'select_coors': """SELECT x_value, y_value FROM graph_data ORDER BY timestamp DESC LIMIT 1"""
+    'insert_coors': """INSERT INTO graph_data (y_value) VALUES (%s)""",
+    'select_coors': """SELECT y_value FROM graph_data ORDER BY timestamp DESC LIMIT 1"""
 } 
+
+mqtt_params = {
+    'host': os.getenv("MQTT_HOST"),
+    'port': os.getenv("MQTT_PORT"),
+    'topic': os.getenv("MQTT_TOPIC"),
+    'user': os.getenv("MQTT_BACKEND_USER"),
+    'password': os.getenv("MQTT_BACKEND_PSWD") 
+    
+}

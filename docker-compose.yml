@@ -8,11 +8,14 @@ services:
       db:
         condition: service_healthy
 
+      mqtt-broker:
+        condition: service_healthy
+
+    stdin_open: true
+    tty: true
+
     env_file:
       - .env
-    environment:
-      - DB_HOST=react_app
-      - DB_PORT=5431
 
     ports:
       - "8000:8000"
@@ -22,19 +25,22 @@ services:
 
 
   frontend:
-    build:
-      context: ./frontend
+    build: ./frontend
     container_name: frontend
+    environment:
+      - REACT_APP_MQTT_HOST=mqtt-broker
+      - REACT_APP_MQTT_PORT=9001
+      - REACT_APP_MQTT_TOPIC=data/messages
     ports:
-      - "3000:80"
-    # depends_on:
-    #   - mqtt-broker
+      - "3000:3000"
     networks:
       - app-network
 
   db:
+    container_name: db
     image: postgres:17
     environment:
+        
         POSTGRES_DB: ${DB_NAME}
         POSTGRES_USER: ${DB_USER}
         POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -43,8 +49,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
+    networks:
+      - app-network
+
     ports:
-      - "5431:5431"
+      - "5432:5432"
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
@@ -52,15 +61,39 @@ services:
       timeout: 5s
       retries: 5
 
-  # mqtt_broker:
-  #   image: eclipse-mosquitto:2.0.21
-  #   container_name: mqtt-broker
-  #   ports:
-  #     - "1883:1883"
-  #   volumes:
-  #     - ./mosquitto.conf:./mosquitto.conf
-  #   networks:
-  #     - app-network
+  adminer:  # This should be a separate service, not inside the db service
+    image: adminer
+    container_name: adminer
+    restart: always
+    networks:
+      - app-network
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0.21
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"  # WebSockets
+
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/config/pwfile:/mosquitto/config/pwfile
+      - ./mosquitto/data/:/mosquitto/data/
+      - ./mosquitto/log:/mosquitto/log
+    networks:
+      - app-network
+
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_pub -h localhost -t test -m test || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
 
 networks:
   app-network:
