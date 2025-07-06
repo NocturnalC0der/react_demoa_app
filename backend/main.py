@@ -16,7 +16,7 @@ def main():
     """Main app functionality"""
     end = False
     
-    start_subscriber()
+    # start_subscriber()
     # subscriber_thread.start()
     
     while not end:
@@ -32,6 +32,5 @@ def main():
 
 if __name__ == "__main__":
     start_server_thread() #Start API server
-    print('bracho jebe ti na tu tvoju gebulu sprostu')
     time.sleep(1)
     main() #Start app functionality

@@ -5,6 +5,9 @@ from config import mqtt_params
 host = mqtt_params['host']
 port = mqtt_params['port']
 topic = mqtt_params['topic']
+username = mqtt_params['username']
+password = mqtt_params['password']
+
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0: #if No error happened
@@ -17,6 +20,13 @@ def on_publish(client, userdata, mid):
     print(f'Message {mid} published.')
 
 pub_client = mqtt.Client()
+# Set credentials before connecting
+if username and password:
+    pub_client.username_pw_set(username, password)
+    print(f"Using authentication with username: {username}")
+else:
+    print("Warning: No MQTT credentials provided")
+
 pub_client.on_connect = on_connect
 pub_client.on_publish = on_publish
 

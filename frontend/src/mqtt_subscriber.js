@@ -9,11 +9,12 @@ export const useMqtt = (mqttUrl, topic) => {
     const [latestMessage, setLatestMessage] = useState(null);
 
     const clientRef = useRef(null);
+    const hasReloadedRef = useRef(false); // Prevent infinite reloads
 
     function subscribe(topic, client) {
         client.subscribe(topic, {qos:1}, (err) => {
             if (err) {
-                console.log(`Failed to subscribe to topic ${topic}:`, err)
+                console.log(`Failed to§ subscribe to topic ${topic}:`, err)
             } else {
                 console.log(`Connected to topic ${topic} successfully!`);
             }
@@ -22,7 +23,10 @@ export const useMqtt = (mqttUrl, topic) => {
 
 
     useEffect(() => {        
-        const client = mqtt.connect(mqttUrl)
+        const client = mqtt.connect(mqttUrl, {
+            reconnectPeriod: 0, // Disable auto-reconnect
+            connectTimeout: 5000
+        })
 
         clientRef.current = client;
 
@@ -33,6 +37,29 @@ export const useMqtt = (mqttUrl, topic) => {
             subscribe(topic, client)
             console.log("Subscribed to topic")
         });
+
+        // Add disconnect handler
+        client.on('disconnect', () => {
+            console.log("MQTT client disconnected");
+            setIsConnected(false);
+
+            // Reload page only once to avoid infinite loops
+            if (!hasReloadedRef.current) {
+                hasReloadedRef.current = true;
+                console.log("Reloading page to reset connection...");
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000); // Wait 2 seconds before reload
+            }
+        });
+
+        //  // Add error handler with reload
+        // client.on('error', (error) => {
+        //     console.log("MQTT connection error:", error);
+        //     setIsConnected(false);
+            
+        // });
+    
     
         
         client.on('message', (topic, message) => {
@@ -50,11 +77,14 @@ export const useMqtt = (mqttUrl, topic) => {
         });
 
         return () => {
-            if (clientRef.current) {
-                clientRef.current.end();
+            console.log("Disconnecting MQTT JS client.")
+            if (client && client.connected) {
+                client.unsubscribe(topic);
+                client.end(false); // Graceful disconnect instead of forced
             }
-            };
-        }, [mqttUrl]);
+            setIsConnected(false);
+        };
+        }, [mqttUrl, topic]);
     
     return {
         isConnected,

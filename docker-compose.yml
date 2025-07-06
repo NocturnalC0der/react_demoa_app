@@ -11,26 +11,31 @@ services:
       mqtt-broker:
         condition: service_healthy
 
-    stdin_open: true
-    tty: true
-
     env_file:
-      - .env
-
+      - ./.env  # Use this instead of specifying each variable
     ports:
       - "8000:8000"
 
     networks:
       - app-network
 
+     # Add these lines for proper logging
+    tty: true
+    stdin_open: true
+
 
   frontend:
     build: ./frontend
     container_name: frontend
     environment:
-      - REACT_APP_MQTT_HOST=mqtt-broker
-      - REACT_APP_MQTT_PORT=9001
-      - REACT_APP_MQTT_TOPIC=data/messages
+      - REACT_APP_WEBSOCKETS_PORT=${REACT_APP_WEBSOCKETS_PORT}
+      - REACT_APP_WEBSOCKETS_HOST=${REACT_APP_WEBSOCKETS_HOST}
+      - REACT_APP_MQTT_HOST=${REACT_APP_MQTT_HOST}
+      - REACT_APP_MQTT_PORT=${REACT_APP_MQTT_PORT}
+      - REACT_APP_MQTT_TOPIC=${MQTT_TOPIC}
+      - REACT_APP_MQTT_USERNAME=${MQTT_FRONTEND_USER}
+      - REACT_APP_MQTT_PASSWORD=${MQTT_FRONTEND_PASSWORD}
+
     ports:
       - "3000:3000"
     networks:
@@ -51,9 +56,6 @@ services:
 
     networks:
       - app-network
-
-    ports:
-      - "5432:5432"
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
@@ -76,7 +78,7 @@ services:
     image: eclipse-mosquitto:2.0.21
     container_name: mqtt-broker
     ports:
-      - "1883:1883"
+    #   - "1883:1883"
       - "9001:9001"  # WebSockets
 
     volumes:
